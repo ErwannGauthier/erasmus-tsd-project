@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCookies } from 'react-cookie';
 import socket from '../../../utils/socket';
+import { useCookies } from 'react-cookie';
+import { preventEnterSubmitting } from 'utils/functions';
 
 interface FormData {
   name: string;
@@ -18,14 +19,8 @@ export default function CreateRoomPage() {
     isPrivate: true
   });
   const [alertText, setAlertText] = useState<string>('');
-  const [cookies, setCookie] = useCookies(['token', 'user']);
   const router = useRouter();
-
-  const preventEnterSubmitting = (event: React.KeyboardEvent): void => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-    }
-  };
+  const [cookies] = useCookies(['user']);
 
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();

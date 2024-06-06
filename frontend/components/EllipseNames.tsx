@@ -1,23 +1,28 @@
-import { int } from 'drizzle-orm/mysql-core';
-import { string } from 'prop-types';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { UserDto } from '../types/data/UserDto';
+import socket from '../utils/socket';
+import { useCookies } from 'react-cookie';
 
 export interface Name {
-    name: string;
-    hasValidated: boolean;
+  name: string;
+  hasValidated: boolean;
 }
 
 interface EllipseNamesProps {
-  names: Name[];
+  users: UserDto[];
   width: number;
+  roomId: string;
+  isAdmin: boolean;
 }
 
-const EllipseNames: React.FC<EllipseNamesProps> = ({ names, width }) => {
+const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdmin }) => {
+  const [cookies] = useCookies(['user']);
+
   const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
   const [size, setSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   useEffect(() => {
-    const ellipsePositions = calculateEllipsePositions(names.length, width, width/2);
+    const ellipsePositions = calculateEllipsePositions(users.length, width, width / 2);
     setPositions(ellipsePositions);
 
     const maxX = Math.max(...ellipsePositions.map(p => p.x));
@@ -27,9 +32,9 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ names, width }) => {
 
     setSize({
       width: maxX - minX + 100,
-      height: maxY - minY + 100,
+      height: maxY - minY + 100
     });
-  }, [names.length]);
+  }, [users.length]);
 
   const calculateEllipsePositions = (count: number, rx: number, ry: number) => {
     const positions = [];
@@ -45,19 +50,32 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ names, width }) => {
     return positions;
   };
 
+  const handleKick = (userId: string) => {
+    console.log(userId);
+    socket.emit('kickRoom', { userId: userId, roomId: roomId });
+  };
+
   return (
     <div className="relative mx-auto" style={{ width: `${size.width}px`, height: `${size.height}px` }}>
-      <div className="absolute inset-0 bg-table-image bg-cover bg-center rounded-full" style={{ clipPath: 'ellipse(75% 50% at 50% 50%)' }}></div>
-      {names.map((name, index) => (
+      <div className="absolute inset-0 bg-table-image bg-cover bg-center rounded-full"
+           style={{ clipPath: 'ellipse(75% 50% at 50% 50%)' }}></div>
+      {users.map((user, index) => (
         <div
           key={index}
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
-          style={{ left: `${size.width / 2 + positions[index]?.x}px`, top: `${size.height / 2 + positions[index]?.y}px` }}
+          style={{
+            left: `${size.width / 2 + positions[index]?.x}px`,
+            top: `${size.height / 2 + positions[index]?.y}px`
+          }}
         >
-            <div className={`rounded p-1 ${name.hasValidated? "bg-green-600" : "bg-red-600"}`}>{name.name}</div>
+          {/* ${user.hasValidated ? 'bg-green-600' : 'bg-red-600'}*/}
+          <div className={`rounded p-1 bg-red-600`}>{user.name}</div>
+          {(isAdmin && user.userId !== cookies.user.userId) && <button onClick={() => handleKick(user.userId)}
+                                                                       className="font-normal text-sm rounded p-1 bg-gray-400">Kick</button>}
         </div>
       ))}
-      <div className="absolute transform -translate-x-1/2 -translate-y-1/2 text-center" style={{ left: `${size.width / 2}px`, top: `${size.height / 2}px` }}>
+      <div className="absolute transform -translate-x-1/2 -translate-y-1/2 text-center"
+           style={{ left: `${size.width / 2}px`, top: `${size.height / 2}px` }}>
         Mean: 60
       </div>
     </div>

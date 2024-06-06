@@ -45,5 +45,5 @@ frontend/.gitignore
 backend/.idea/
 backend/node_modules/
 backend/prisma/migrations/
-backend/.env
+backend/.env*
 backend/.gitignore

@@ -149,6 +149,20 @@ export class UserService {
         return this.userToUserDto(user);
     }
 
+    public async isInRoom(id: string, roomId: string): Promise<boolean> {
+        const userRoom: UserRoom | null = await this.prisma.userRoom.findUnique({
+            where: {
+                userRoomId: {
+                    userId: id,
+                    roomId: roomId
+                }
+            }
+        });
+
+        if (!userRoom) return false;
+        return true;
+    }
+
     public async joinRoom(id: string, roomId: string): Promise<boolean> {
         const user: UserIncludesDto | null = await this.get(id);
         const room: RoomIncludes | null = await this.roomService.get(roomId);
@@ -164,15 +178,14 @@ export class UserService {
             }
         });
 
-        if (userRoom) return true;
-
-
-        await this.prisma.userRoom.create({
-            data: {
-                userId: id,
-                roomId: roomId
-            }
-        });
+        if (!userRoom) {
+            await this.prisma.userRoom.create({
+                data: {
+                    userId: id,
+                    roomId: roomId
+                }
+            });
+        }
 
         return true;
     }

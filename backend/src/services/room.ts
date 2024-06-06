@@ -1,10 +1,14 @@
 import {PrismaClient, Room, UserRoom, UserStory} from "@prisma/client";
 import {UserDto} from "./user";
 
-export type RoomIncludes =
-    Room & {
+export type UserRoomIncludes = UserRoom & {
+    Room: Room;
+    User: UserDto;
+}
+
+export type RoomIncludes = Room & {
     Admin: UserDto;
-    UserRoom: UserRoom[];
+    UserRoom: UserRoomIncludes[];
     UserStory: UserStory[];
 }
 
@@ -19,7 +23,12 @@ export class RoomService {
         return this.prisma.room.findMany({
             include: {
                 Admin: true,
-                UserRoom: true,
+                UserRoom: {
+                    include: {
+                        Room: true,
+                        User: true,
+                    }
+                },
                 UserStory: true
             }
         });
@@ -32,7 +41,12 @@ export class RoomService {
             },
             include: {
                 Admin: true,
-                UserRoom: true,
+                UserRoom: {
+                    include: {
+                        Room: true,
+                        User: true,
+                    }
+                },
                 UserStory: true
             }
         });
@@ -43,7 +57,7 @@ export class RoomService {
             data: {
                 roomId: crypto.randomUUID(),
                 name: name,
-                maxUsers: maxUsers,
+                maxUsers: Number(maxUsers),
                 isPrivate: isPrivate,
                 adminId: adminId,
             }
