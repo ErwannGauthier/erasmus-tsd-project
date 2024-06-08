@@ -51,7 +51,6 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdm
   };
 
   const handleKick = (userId: string) => {
-    console.log(userId);
     socket.emit('kickRoom', { userId: userId, roomId: roomId });
   };
 

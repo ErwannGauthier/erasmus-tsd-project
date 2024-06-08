@@ -4,9 +4,10 @@ import {Server} from 'socket.io';
 import cors from 'cors';
 import {userRouter} from "./routes/user";
 import {RoomIncludes, RoomService} from "./services/room";
-import {PrismaClient, Room, UserStory} from "@prisma/client";
+import {PrismaClient, Room, Task, UserStory} from "@prisma/client";
 import {UserService} from "./services/user";
 import {UserStoryService} from "./services/userStory";
+import {TaskService} from "./services/task";
 
 const app = express();
 const server = http.createServer(app);
@@ -32,6 +33,7 @@ io.on("connection", (socket) => {
     const userService: UserService = new UserService(prismaClient);
     const roomService: RoomService = new RoomService(prismaClient);
     const userStoryService: UserStoryService = new UserStoryService(prismaClient);
+    const taskService: TaskService = new TaskService(prismaClient);
 
     interface CreateRoomData {
         name: string,
@@ -39,6 +41,15 @@ io.on("connection", (socket) => {
         isPrivate: boolean,
         adminId: string,
     }
+
+    socket.on('getAllRooms', async () => {
+        try {
+            const rooms: RoomIncludes[] = await roomService.getAll();
+            socket.emit('updateRooms', rooms);
+        } catch (error) {
+            console.error(error);
+        }
+    });
 
     socket.on("createRoom", async (data: CreateRoomData, callback) => {
         try {
@@ -50,9 +61,8 @@ io.on("connection", (socket) => {
             }
 
             const room: Room = await roomService.create(name, maxUsers, isPrivate, adminId);
-            if (!room.isPrivate) {
-                socket.broadcast.emit("newRoom", room);
-            }
+            const allRooms: RoomIncludes[] = await roomService.getAll();
+            socket.broadcast.emit('updateRooms', allRooms);
             callback(true, room.roomId);
         } catch (error) {
             console.error(error);
@@ -78,10 +88,12 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            socket.join(roomId);
             const updatedRoom: RoomIncludes = (await roomService.get(roomId))!;
+            socket.join(roomId);
             socket.to(roomId).emit("updateRoomData", updatedRoom);
-            socket.emit("updateRoomData", room);
+
+            const allRooms: RoomIncludes[] = await roomService.getAll();
+            socket.broadcast.emit('updateRooms', allRooms);
 
             callback({isOk: true, message: "You joined the room.", room: updatedRoom});
         } catch (error) {
@@ -107,8 +119,10 @@ io.on("connection", (socket) => {
             const room: RoomIncludes = (await roomService.get(roomId))!;
 
             socket.to(roomId).emit("updateRoomData", room);
-            socket.emit("updateRoomData", room);
             socket.leave(roomId);
+
+            const allRooms: RoomIncludes[] = await roomService.getAll();
+            socket.broadcast.emit('updateRooms', allRooms);
         } catch (error) {
             console.error(error);
             callback({isOk: false, error: "Internal Server Error"});
@@ -133,6 +147,9 @@ io.on("connection", (socket) => {
 
             socket.to(roomId).emit("updateRoomData", room);
             socket.emit("updateRoomData", room);
+
+            const allRooms: RoomIncludes[] = await roomService.getAll();
+            socket.broadcast.emit('updateRooms', allRooms);
         } catch (error) {
             console.error(error);
             callback({isOk: false, error: "Internal Server Error"});
@@ -156,7 +173,99 @@ io.on("connection", (socket) => {
             console.error(error);
             callback({isOk: false, error: "Internal Server Error"});
         }
-    })
+    });
+
+    socket.on('updateUserStory', async (data: {
+        roomId: string,
+        userStoryId: string,
+        name: string,
+        description: string,
+        finalVote: string
+    }, callback) => {
+        try {
+            const {roomId, userStoryId, name, description, finalVote} = data;
+            if (!await roomService.get(roomId) || !await userStoryService.get(userStoryId)) {
+                callback({isOk: false, error: "Not found"});
+                return;
+            }
+
+            const userStory: UserStory = await userStoryService.update(userStoryId, name, description, finalVote, roomId);
+            const room: RoomIncludes = (await roomService.get(roomId))!;
+            socket.to(roomId).emit("updateRoomData", room);
+            socket.emit("updateRoomData", room);
+            callback({isOk: true, message: "User Story updated."});
+        } catch (error) {
+            console.error(error);
+            callback({isOk: false, error: "Internal Server Error"});
+        }
+    });
+
+    socket.on('deleteUserStory', async (data: { roomId: string, userStoryId: string }) => {
+        try {
+            const {roomId, userStoryId} = data;
+            if (!await roomService.get(roomId) || !await userStoryService.get(userStoryId)) return;
+
+            await userStoryService.delete(userStoryId);
+            const room: RoomIncludes = (await roomService.get(roomId))!;
+            socket.to(roomId).emit("updateRoomData", room);
+            socket.emit("updateRoomData", room);
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+    socket.on('createTask', async (data: {
+        roomId: string,
+        userStoryId: string,
+        name: string,
+        description: string
+    }, callback) => {
+        const {roomId, userStoryId, name, description} = data;
+        if (!await roomService.get(roomId) || !await userStoryService.get(userStoryId)) {
+            callback({isOk: false, error: "Not found"});
+            return;
+        }
+
+        const task: Task = await taskService.create(name, description, userStoryId);
+        const room: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+        callback({isOk: true, message: "Task created."});
+    });
+
+    socket.on('updateTask', async (data: {
+        roomId: string,
+        taskId: string,
+        name: string,
+        description: string,
+        userStoryId: string
+    }, callback) => {
+        const {roomId, taskId, userStoryId, name, description} = data;
+        if (!await roomService.get(roomId) || !await userStoryService.get(userStoryId) || !await taskService.get(taskId)) {
+            callback({isOk: false, error: "Not found"});
+            return;
+        }
+
+        const task: Task = await taskService.update(taskId, name, description, userStoryId);
+        const room: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+        callback({isOk: true, message: "Task updated."});
+    });
+
+    socket.on('deleteTask', async (data: { roomId: string, taskId: string }) => {
+        try {
+            const {roomId, taskId} = data;
+            if (!await roomService.get(roomId) || !await taskService.get(taskId)) return;
+
+            await taskService.delete(taskId);
+            const room: RoomIncludes = (await roomService.get(roomId))!;
+            socket.to(roomId).emit("updateRoomData", room);
+            socket.emit("updateRoomData", room);
+        } catch (error) {
+            console.error(error);
+        }
+    });
 
     socket.on("disconnect", () => {
         console.log("Client disconnected: " + socket.id);

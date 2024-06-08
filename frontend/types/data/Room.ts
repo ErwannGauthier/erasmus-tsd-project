@@ -4,5 +4,6 @@ export type Room = {
   createdAt: Date,
   maxUsers: number,
   isPrivate: boolean,
+  isClose: boolean,
   adminId: string
 }

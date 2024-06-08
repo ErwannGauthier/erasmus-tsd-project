@@ -179,11 +179,18 @@ export class UserService {
         });
 
         if (!userRoom) {
-            await this.prisma.userRoom.create({
-                data: {
-                    userId: id,
-                    roomId: roomId
-                }
+            await this.prisma.userRoom.upsert({
+                where: {
+                    userRoomId: {
+                        roomId: roomId,
+                        userId: id
+                    }
+                },
+                create: {
+                    roomId: roomId,
+                    userId: id
+                },
+                update: {}
             });
         }
 

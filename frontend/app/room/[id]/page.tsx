@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import EllipseNames from '@/components/EllipseNames';
 import Card from '@/components/Card';
-import { ITask } from '@/components/Task';
+import { ITask } from '@/components/OldTask';
 import socket from '../../../utils/socket';
 import { useCookies } from 'react-cookie';
 import { RoomIncludes } from '../../../types/data/RoomIncludes';
@@ -14,7 +14,6 @@ import CopyToClipBoard from '@/components/CopyToClipBoard';
 import UserStoryPanel from '@/components/UserStoryPanel';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useRouter } from 'next/navigation';
-import { UserStory } from '../../../types/data/UserStory';
 
 export interface IUserStory {
   id: number;
@@ -40,7 +39,6 @@ export default function Room({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (!hasMounted) {
       setHasMounted(true);
-      return;
     }
 
     socket.emit('joinRoom', { userId: cookies.user.userId, roomId: roomId }, (response: JoinRoomResponse) => {
@@ -59,7 +57,6 @@ export default function Room({ params }: { params: { id: string } }) {
 
     socket.on('updateRoomData', (room: RoomIncludes) => {
       setRoom(room);
-      console.log(room);
       setParticipants(room.UserRoom.map((userRoom: UserRoomIncludes) => userRoom.User));
       room.adminId === cookies.user.userId ? setIsAdmin(true) : setIsAdmin(false);
 
@@ -71,17 +68,6 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [hasMounted]);
 
   console.log(room);
-  /*
-  const callCreateUserStory = (args: CallCreateUserStoryArgs): boolean => {
-    let result: boolean = false;
-    socket.emit('createUserStory', args, (isOk: boolean, response: string) => {
-      result = isOk;
-    });
-
-    return result;
-  };
-
-   */
 
   const isInParticipant = (userId: string, participants: UserDto[]): boolean => {
     const filteredParticipant: UserDto[] = participants.filter((user: UserDto) => user.userId === userId);
@@ -112,14 +98,7 @@ export default function Room({ params }: { params: { id: string } }) {
 
       <div className="flex-1">
         {isAdmin && <CopyToClipBoard />}
-        <UserStoryPanel roomId={roomId} />
-      </div>
-      <div className="flex flex-col">
-        {
-          room && room.UserStory.map((userStory: UserStory, index: number) => (
-            <p key={index}>{userStory.name}</p>
-          ))
-        }
+        <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} />
       </div>
     </div>
   );

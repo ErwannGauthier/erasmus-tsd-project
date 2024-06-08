@@ -22,7 +22,7 @@ interface CardProps {
   deleteTask: (userStoryId: number, taskId: number, taskName: string) => void;
 }
 
-const Task: React.FC<CardProps> = ({ task, setUserStories, userStoryId, deleteTask}) => {
+const OldTask: React.FC<CardProps> = ({ task, setUserStories, userStoryId, deleteTask}) => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [isTaskHovered, setIsTaskHovered] = useState(false);
@@ -31,7 +31,7 @@ const Task: React.FC<CardProps> = ({ task, setUserStories, userStoryId, deleteTa
 
   const saveTaskEdit = () => {
     if (task.name.trim() === "") {
-      alert("Task name cannot be empty");
+      alert("OldTask name cannot be empty");
       return;
     }
     task.name = newName;
@@ -196,5 +196,5 @@ const Task: React.FC<CardProps> = ({ task, setUserStories, userStoryId, deleteTa
   )
 }
 
-export default Task;
+export default OldTask;
      

@@ -1,5 +1,6 @@
-import {PrismaClient, Room, UserRoom, UserStory} from "@prisma/client";
+import {PrismaClient, Room, UserRoom} from "@prisma/client";
 import {UserDto} from "./user";
+import {UserStoryIncludes} from "./userStory";
 
 export type UserRoomIncludes = UserRoom & {
     Room: Room;
@@ -9,7 +10,7 @@ export type UserRoomIncludes = UserRoom & {
 export type RoomIncludes = Room & {
     Admin: UserDto;
     UserRoom: UserRoomIncludes[];
-    UserStory: UserStory[];
+    UserStory: UserStoryIncludes[];
 }
 
 export class RoomService {
@@ -29,7 +30,13 @@ export class RoomService {
                         User: true,
                     }
                 },
-                UserStory: true
+                UserStory: {
+                    include: {
+                        Room: true,
+                        Task: true,
+                        Vote: true
+                    }
+                }
             }
         });
     }
@@ -47,7 +54,13 @@ export class RoomService {
                         User: true,
                     }
                 },
-                UserStory: true
+                UserStory: {
+                    include: {
+                        Room: true,
+                        Task: true,
+                        Vote: true
+                    }
+                }
             }
         });
     }
@@ -59,12 +72,13 @@ export class RoomService {
                 name: name,
                 maxUsers: Number(maxUsers),
                 isPrivate: isPrivate,
+                isClose: false,
                 adminId: adminId,
             }
         });
     }
 
-    public async update(id: string, name: string, maxUsers: number, isPrivate: boolean, adminId: string): Promise<Room> {
+    public async update(id: string, name: string, maxUsers: number, isPrivate: boolean, isClose: boolean, adminId: string): Promise<Room> {
         return this.prisma.room.update({
             where: {
                 roomId: id
@@ -73,6 +87,7 @@ export class RoomService {
                 name: name,
                 maxUsers: maxUsers,
                 isPrivate: isPrivate,
+                isClose: isClose,
                 adminId: adminId,
             }
         });

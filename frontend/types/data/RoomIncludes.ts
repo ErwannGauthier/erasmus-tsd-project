@@ -1,10 +1,10 @@
 import { Room } from './Room';
 import { UserDto } from './UserDto';
-import { UserStory } from './UserStory';
 import { UserRoomIncludes } from './UserRoomIncludes';
+import { UserStoryIncludes } from './UserStoryIncludes';
 
 export type RoomIncludes = Room & {
   Admin: UserDto;
   UserRoom: UserRoomIncludes[];
-  UserStory: UserStory[];
+  UserStory: UserStoryIncludes[];
 }

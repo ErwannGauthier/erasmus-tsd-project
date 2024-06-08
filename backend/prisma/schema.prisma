@@ -19,11 +19,21 @@ model Room {
   createdAt DateTime @default(now())
   maxUsers  Int
   isPrivate Boolean
+  isClose   Boolean
 
   Admin     User        @relation(fields: [adminId], references: [userId])
   adminId   String
   UserRoom  UserRoom[]
   UserStory UserStory[]
+}
+
+model Task {
+  taskId      String @id()
+  name        String
+  description String
+
+  UserStory   UserStory @relation(fields: [userStoryId], references: [userStoryId], onDelete: Cascade)
+  userStoryId String
 }
 
 model User {
@@ -56,6 +66,7 @@ model UserStory {
 
   Room   Room   @relation(fields: [roomId], references: [roomId])
   roomId String
+  Task   Task[]
   Vote   Vote[]
 }
 

@@ -1,7 +1,8 @@
-import {PrismaClient, Room, UserStory, Vote} from "@prisma/client";
+import {PrismaClient, Room, Task, UserStory, Vote} from "@prisma/client";
 
 export type UserStoryIncludes = UserStory & {
     Room: Room;
+    Task: Task[];
     Vote: Vote[];
 }
 
@@ -16,6 +17,7 @@ export class UserStoryService {
         return this.prisma.userStory.findMany({
             include: {
                 Room: true,
+                Task: true,
                 Vote: true
             }
         });
@@ -28,6 +30,7 @@ export class UserStoryService {
             },
             include: {
                 Room: true,
+                Task: true,
                 Vote: true
             }
         });
