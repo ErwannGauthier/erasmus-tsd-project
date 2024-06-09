@@ -232,36 +232,22 @@ export class UserService {
 
         if (!user || !userStory) return false;
 
-        const vote: Vote | null = await this.prisma.vote.findUnique({
+        const vote: Vote = await this.prisma.vote.upsert({
             where: {
                 voteId: {
                     userId: id,
                     userStoryId: userStoryId
                 }
+            },
+            create: {
+                userId: id,
+                userStoryId: userStoryId,
+                value: value
+            },
+            update: {
+                value: value
             }
         });
-
-        if (vote) {
-            await this.prisma.vote.update({
-                where: {
-                    voteId: {
-                        userId: id,
-                        userStoryId: userStoryId
-                    }
-                },
-                data: {
-                    value: value
-                }
-            });
-        } else {
-            await this.prisma.vote.create({
-                data: {
-                    userId: id,
-                    userStoryId: userStoryId,
-                    value: value
-                }
-            });
-        }
 
         return true;
     }

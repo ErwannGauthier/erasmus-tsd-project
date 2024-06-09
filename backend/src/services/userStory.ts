@@ -65,4 +65,14 @@ export class UserStoryService {
     public async delete(id: string): Promise<UserStory> {
         return this.prisma.userStory.delete({where: {userStoryId: id}});
     }
+
+    public async resetVote(id: string): Promise<boolean> {
+        await this.prisma.vote.deleteMany({
+            where: {
+                userStoryId: id
+            }
+        });
+
+        return true;
+    }
 }

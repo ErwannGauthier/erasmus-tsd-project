@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { IoAddCircleOutline, IoArrowDown, IoArrowUp, IoPencil } from 'react-icons/io5';
+import {
+  IoAddCircleOutline,
+  IoArrowDown,
+  IoArrowUp,
+  IoCheckmarkCircleOutline,
+  IoPencil,
+  IoReload,
+  IoStarOutline,
+  IoStop
+} from 'react-icons/io5';
 import { UserStoryIncludes } from '../types/data/UserStoryIncludes';
 import ModalUserStoryUpdate from '@/components/ModalUserStoryUpdate';
 import ModalUserStoryCreate from '@/components/ModalUserStoryCreate';
@@ -9,10 +18,15 @@ import { Task } from '../types/data/Task';
 import ModalTaskCreate from '@/components/ModalTaskCreate';
 import TaskComponent from '@/components/TaskComponent';
 import ModalTaskUpdate from '@/components/ModalTaskUpdate';
+import ModalVoteStart from '@/components/ModalVoteStart';
+import socket from '../utils/socket';
+import ModalVoteValidate from '@/components/ModalVoteValidate';
 
 interface UserStoryPanelProps {
   roomId: string;
   roomUserStories: UserStoryIncludes[];
+  isAdmin: boolean;
+  canVote: boolean;
 }
 
 interface FormDataUpdate {
@@ -22,7 +36,7 @@ interface FormDataUpdate {
   finalVote: string;
 }
 
-const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories }) => {
+const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories, isAdmin, canVote }) => {
   const [userStories, setUserStories] = useState<UserStoryIncludes[]>(roomUserStories);
   const [userStoryIdToExpand, setUserStoryIdToExpand] = useState<string>('');
   const [userStoryUpdateFormData, setUserStoryUpdateFormData] = useState<FormDataUpdate>({
@@ -37,10 +51,13 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
     description: '',
     userStoryId: ''
   });
+  const [startVoteUserStory, setStartVoteUserStory] = useState<UserStoryIncludes>();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState<boolean>(false);
   const [isUpdateTaskModalOpen, setIsUpdateTaskModalOpen] = useState<boolean>(false);
+  const [isStartVoteModalOpen, setIsStartVoteModalOpen] = useState<boolean>(false);
+  const [isValidateVoteModalOpen, setIsValidateVoteModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setUserStories([...roomUserStories]);
@@ -65,6 +82,19 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
     setIsUpdateTaskModalOpen(true);
   };
 
+  const initializeStartVote = (userStory: UserStoryIncludes): void => {
+    setStartVoteUserStory(userStory);
+    setIsStartVoteModalOpen(true);
+  };
+
+  const stopVote = (): void => {
+    socket.emit('closeVote', { roomId: roomId });
+  };
+
+  const redoVote = (): void => {
+    socket.emit('redoVote', { roomId: roomId, userStoryId: startVoteUserStory?.userStoryId });
+  };
+
   const closeModalCreate = (): void => {
     setIsCreateModalOpen(false);
   };
@@ -81,6 +111,16 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
     setIsUpdateTaskModalOpen(false);
   };
 
+  const closeModalStartVote = (start: boolean): void => {
+    setIsStartVoteModalOpen(false);
+    !start && setStartVoteUserStory(undefined);
+  };
+
+  const closeModalValidateVote = (validate: boolean): void => {
+    setIsValidateVoteModalOpen(false);
+    validate && setStartVoteUserStory(undefined);
+  };
+
   return (
     <>
       <button onClick={() => setIsCreateModalOpen(true)} className="ml-2 p-2 bg-blue-500 text-white rounded">
@@ -92,10 +132,39 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-semibold">{userStory.name}</h2>
+                {userStory.finalVote.length > 0 && <p className="font-medium">Vote: {userStory.finalVote}</p>}
                 <p className="text-sm font-light">{userStory.description}</p>
               </div>
 
               <div className="flex items-center">
+                {(isAdmin && !startVoteUserStory) &&
+                  <button className="ml-2 p-2 bg-yellow-600 text-white rounded"
+                          onClick={() => initializeStartVote(userStory)}>
+                    <IoStarOutline />
+                  </button>
+                }
+
+                {(isAdmin && startVoteUserStory?.userStoryId == userStory.userStoryId && canVote) &&
+                  <button className="ml-2 p-2 bg-red-500 text-white rounded"
+                          onClick={() => stopVote()}>
+                    <IoStop />
+                  </button>
+                }
+
+                {(isAdmin && startVoteUserStory?.userStoryId == userStory.userStoryId && !canVote) &&
+                  <>
+                    <button className="ml-2 p-2 bg-green-500 text-white rounded"
+                            onClick={() => setIsValidateVoteModalOpen(true)}>
+                      <IoCheckmarkCircleOutline />
+                    </button>
+
+                    <button className="ml-2 p-2 bg-blue-500 text-white rounded"
+                            onClick={() => redoVote()}>
+                      <IoReload />
+                    </button>
+                  </>
+                }
+
                 <button className="ml-2 p-2 bg-purple-500 text-white rounded"
                         onClick={() => initializeUpdateData(userStory.userStoryId)}>
                   <IoPencil />
@@ -124,7 +193,8 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
       </ul>
 
 
-      {isCreateModalOpen && <ModalUserStoryCreate roomId={roomId} closeModal={closeModalCreate} />}
+      {isCreateModalOpen &&
+        <ModalUserStoryCreate roomId={roomId} closeModal={closeModalCreate} />}
 
       {isUpdateModalOpen &&
         <ModalUserStoryUpdate roomId={roomId} formDataProps={userStoryUpdateFormData} closeModal={closeModalUpdate} />}
@@ -134,8 +204,15 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
 
       {isUpdateTaskModalOpen &&
         <ModalTaskUpdate roomId={roomId} formDataProps={taskUpdateFormData} closeModal={closeModalTaskUpdate} />}
+
+      {isStartVoteModalOpen && startVoteUserStory &&
+        <ModalVoteStart roomId={roomId} userStory={startVoteUserStory} closeModal={closeModalStartVote} />}
+
+      {isValidateVoteModalOpen && startVoteUserStory &&
+        <ModalVoteValidate roomId={roomId} userStory={startVoteUserStory} closeModal={closeModalValidateVote} />}
     </>
-  );
+  )
+    ;
 };
 
 export default UserStoryPanel;

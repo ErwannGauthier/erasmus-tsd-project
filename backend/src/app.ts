@@ -6,7 +6,7 @@ import {userRouter} from "./routes/user";
 import {RoomIncludes, RoomService} from "./services/room";
 import {PrismaClient, Room, Task, UserStory} from "@prisma/client";
 import {UserService} from "./services/user";
-import {UserStoryService} from "./services/userStory";
+import {UserStoryIncludes, UserStoryService} from "./services/userStory";
 import {TaskService} from "./services/task";
 
 const app = express();
@@ -266,6 +266,78 @@ io.on("connection", (socket) => {
             console.error(error);
         }
     });
+
+    socket.on('startVote', async (data: { roomId: string, userStoryId: string }) => {
+        const {roomId, userStoryId} = data;
+        const userStory: UserStoryIncludes | null = await userStoryService.get(userStoryId);
+        if (!await roomService.get(roomId) || !userStory) return;
+
+        await userStoryService.update(userStoryId, userStory.name, userStory.description, '', userStory.roomId);
+        await userStoryService.resetVote(userStoryId);
+
+        const room: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+        socket.to(roomId).emit("newVoteUserStory", userStory.userStoryId);
+        socket.emit("newVoteUserStory", userStory.userStoryId);
+        socket.to(roomId).emit("canVote", true);
+        socket.emit("canVote", true);
+    });
+
+    socket.on('closeVote', async (data: { roomId: string }) => {
+        const {roomId} = data;
+        if (!await roomService.get(roomId)) return;
+
+        socket.to(roomId).emit("canVote", false);
+        socket.emit("canVote", false);
+    });
+
+    socket.on('redoVote', async (data: { roomId: string, userStoryId: string }) => {
+        const {roomId, userStoryId} = data;
+        const userStory: UserStoryIncludes | null = await userStoryService.get(userStoryId);
+        if (!await roomService.get(roomId) || !userStory) return;
+
+        await userStoryService.update(userStoryId, userStory.name, userStory.description, '', userStory.roomId);
+        await userStoryService.resetVote(userStoryId);
+
+        const room: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+        socket.to(roomId).emit("canVote", true);
+        socket.emit("canVote", true);
+    });
+
+    socket.on('validateVote', async (data: { roomId: string, userStoryId: string, finalVote: string }) => {
+        const {roomId, userStoryId, finalVote} = data;
+        const userStory: UserStoryIncludes | null = await userStoryService.get(userStoryId);
+        if (!await roomService.get(roomId) || !userStory) return;
+
+        await userStoryService.update(userStoryId, userStory.name, userStory.description, finalVote, userStory.roomId);
+        finalVote.length === 0 && await userStoryService.resetVote(userStoryId);
+        socket.to(roomId).emit("newVoteUserStory", undefined);
+        socket.emit("newVoteUserStory", undefined);
+
+        const room: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+    });
+
+    socket.on('vote', async (data: { roomId: string, userStoryId: string, userId: string, vote: string }) => {
+        const {roomId, userStoryId, userId, vote} = data;
+        if (!await roomService.get(roomId) || !await userService.get(userId) || !await userStoryService.get(userStoryId)) return;
+
+        await userService.vote(userId, userStoryId, vote);
+
+        const room: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+
+        const userStory: UserStoryIncludes = (await userStoryService.get(userStoryId))!;
+        if (userStory.Vote.length >= room.UserRoom.length) {
+            socket.to(roomId).emit("canVote", false);
+            socket.emit("canVote", false);
+        }
+    })
 
     socket.on("disconnect", () => {
         console.log("Client disconnected: " + socket.id);

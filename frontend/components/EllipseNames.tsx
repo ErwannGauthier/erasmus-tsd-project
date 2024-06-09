@@ -2,20 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { UserDto } from '../types/data/UserDto';
 import socket from '../utils/socket';
 import { useCookies } from 'react-cookie';
-
-export interface Name {
-  name: string;
-  hasValidated: boolean;
-}
+import { UserStoryIncludes } from '../types/data/UserStoryIncludes';
+import { Vote } from '../types/data/Vote';
 
 interface EllipseNamesProps {
   users: UserDto[];
   width: number;
   roomId: string;
   isAdmin: boolean;
+  userStory?: UserStoryIncludes;
+  showVote: boolean;
 }
 
-const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdmin }) => {
+const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdmin, userStory, showVote }) => {
   const [cookies] = useCookies(['user']);
 
   const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
@@ -54,6 +53,19 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdm
     socket.emit('kickRoom', { userId: userId, roomId: roomId });
   };
 
+  const hasUserVoted = (userId: string): boolean => {
+    if (!userStory) return false;
+    const filteredVote: Vote[] = userStory.Vote.filter((vote: Vote) => vote.userId === userId);
+    return filteredVote.length > 0;
+  };
+
+  const getUserVote = (userId: string): string => {
+    if (!userStory) return '';
+    const filteredVote: Vote[] = userStory.Vote.filter((vote: Vote) => vote.userId === userId);
+    if (filteredVote.length > 0) return filteredVote[0].value;
+    return '';
+  };
+
   return (
     <div className="relative mx-auto" style={{ width: `${size.width}px`, height: `${size.height}px` }}>
       <div className="absolute inset-0 bg-table-image bg-cover bg-center rounded-full"
@@ -67,15 +79,15 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdm
             top: `${size.height / 2 + positions[index]?.y}px`
           }}
         >
-          {/* ${user.hasValidated ? 'bg-green-600' : 'bg-red-600'}*/}
-          <div className={`rounded p-1 bg-red-600`}>{user.name}</div>
+          {/* */}
+          <div className={`rounded p-1 ${hasUserVoted(user.userId) ? 'bg-green-600' : 'bg-red-600'}`}>{user.name}</div>
+          {userStory && showVote && getUserVote(user.userId) && <p>Vote: {getUserVote(user.userId)}</p>}
           {(isAdmin && user.userId !== cookies.user.userId) && <button onClick={() => handleKick(user.userId)}
                                                                        className="font-normal text-sm rounded p-1 bg-gray-400">Kick</button>}
         </div>
       ))}
       <div className="absolute transform -translate-x-1/2 -translate-y-1/2 text-center"
            style={{ left: `${size.width / 2}px`, top: `${size.height / 2}px` }}>
-        Mean: 60
       </div>
     </div>
   );

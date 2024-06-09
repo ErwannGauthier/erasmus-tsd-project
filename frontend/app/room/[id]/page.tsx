@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import EllipseNames from '@/components/EllipseNames';
-import Card from '@/components/Card';
 import { ITask } from '@/components/OldTask';
 import socket from '../../../utils/socket';
 import { useCookies } from 'react-cookie';
@@ -14,6 +13,9 @@ import CopyToClipBoard from '@/components/CopyToClipBoard';
 import UserStoryPanel from '@/components/UserStoryPanel';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useRouter } from 'next/navigation';
+import { UserStoryIncludes } from '../../../types/data/UserStoryIncludes';
+import Card from '@/components/Card';
+import { Vote } from '../../../types/data/Vote';
 
 export interface IUserStory {
   id: number;
@@ -34,6 +36,8 @@ export default function Room({ params }: { params: { id: string } }) {
   const [room, setRoom] = useState<RoomIncludes>();
   const [participants, setParticipants] = useState<UserDto[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [votingUserStoryId, setVotingUserStoryId] = useState<string>();
+  const [canVote, setCanVote] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -65,6 +69,14 @@ export default function Room({ params }: { params: { id: string } }) {
         router.push('/');
       }
     });
+
+    socket.on('newVoteUserStory', (userStoryId: string) => {
+      setVotingUserStoryId(userStoryId);
+    });
+
+    socket.on('canVote', (vote: boolean) => {
+      setCanVote(vote);
+    });
   }, [hasMounted]);
 
   console.log(room);
@@ -74,7 +86,29 @@ export default function Room({ params }: { params: { id: string } }) {
     return filteredParticipant.length > 0;
   };
 
-  const values: number[] = [0, 1, 2, 3, 5, 8, 13, 20, 40, 100];
+  const getVotingUserStory = (): UserStoryIncludes | undefined => {
+    if (room && votingUserStoryId) {
+      const filteredUserStories: UserStoryIncludes[] = room.UserStory.filter((userStory: UserStoryIncludes) => userStory.userStoryId === votingUserStoryId);
+      if (filteredUserStories.length > 0) return filteredUserStories[0];
+    }
+
+    return undefined;
+  };
+
+  const getUserVote = (): string => {
+    if (room && votingUserStoryId) {
+      const filteredUserStories: UserStoryIncludes[] = room.UserStory.filter((userStory: UserStoryIncludes) => userStory.userStoryId === getVotingUserStory()!.userStoryId);
+      if (filteredUserStories.length > 0) {
+        const userStory: UserStoryIncludes = filteredUserStories[0];
+        const filteredVote: Vote[] = userStory.Vote.filter((vote: Vote) => vote.userId === cookies.user.userId);
+        if (filteredVote.length > 0) return filteredVote[0].value;
+      }
+    }
+
+    return '';
+  };
+
+  const values: string[] = ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100'];
 
   if (!hasMounted || !room) {
     return <LoadingScreen />;
@@ -85,21 +119,27 @@ export default function Room({ params }: { params: { id: string } }) {
       <div className="flex flex-col bg-gray-100" style={{ minWidth: '300px', maxWidth: '70%' }}>
 
         <div className="flex flex-col items-center justify-center bg-gray-100">
-          {room && <h1 className="text-2xl font-bold mb-4">{room.name}</h1>}
-          <EllipseNames users={participants} width={220} roomId={roomId} isAdmin={isAdmin} />
+          {room && <h1 className="text-2xl font-bold mb-2">{room.name}</h1>}
+          {votingUserStoryId && canVote &&
+            <h2 className="text-xl font-semibold mb-4">Please vote for the user story: {getVotingUserStory()!.name}</h2>}
+          <EllipseNames users={participants} width={220} roomId={roomId} isAdmin={isAdmin}
+                        userStory={getVotingUserStory()} showVote={!canVote} />
         </div>
 
-        <div className="flex flex-wrap w-full p-4">
-          {values.map((value) => (
-            <Card value={value} isSelected={value === 5} key={value} />
-          ))}
-        </div>
+        {votingUserStoryId && canVote &&
+          <div className="flex flex-wrap w-full p-4">
+            {values.map((value) => <Card key={value} roomId={roomId} userStoryId={getVotingUserStory()!.userStoryId}
+                                         value={value} isSelected={getUserVote() === value} />)}
+          </div>
+        }
       </div>
 
       <div className="flex-1">
         {isAdmin && <CopyToClipBoard />}
-        <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} />
+        <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} isAdmin={isAdmin} canVote={canVote} />
       </div>
+      ;
     </div>
-  );
+  )
+    ;
 }
