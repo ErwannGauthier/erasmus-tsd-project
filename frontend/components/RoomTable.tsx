@@ -3,6 +3,8 @@
 import React from 'react';
 import { RoomIncludes } from '../types/data/RoomIncludes';
 import { useRouter } from 'next/navigation';
+import { UserRoomIncludes } from '../types/data/UserRoomIncludes';
+import { useCookies } from 'react-cookie';
 
 
 interface RoomTableProps {
@@ -10,7 +12,13 @@ interface RoomTableProps {
 }
 
 const RoomTable: React.FC<RoomTableProps> = ({ rooms }) => {
+  const [cookies] = useCookies(['user']);
   const router = useRouter();
+
+  const isUserInRoom = (room: RoomIncludes): boolean => {
+    const filtered: UserRoomIncludes[] = room.UserRoom.filter((userRoom: UserRoomIncludes) => userRoom.userId === cookies.user.userId);
+    return filtered.length > 0;
+  };
 
   return (
     <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -39,7 +47,7 @@ const RoomTable: React.FC<RoomTableProps> = ({ rooms }) => {
                 {room.UserRoom.length} / {room.maxUsers}
               </td>
               <td className="px-6 py-4 w-1/6 text-center">
-                {room.UserRoom.length < room.maxUsers ?
+                {room.UserRoom.length < room.maxUsers || isUserInRoom(room) ?
                   <button id="joinButton" onClick={() => router.push('/room/' + room.roomId)}
                           className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
                     Join

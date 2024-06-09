@@ -14,12 +14,13 @@ datasource db {
 }
 
 model Room {
-  roomId    String   @id()
-  name      String
-  createdAt DateTime @default(now())
-  maxUsers  Int
-  isPrivate Boolean
-  isClose   Boolean
+  roomId     String   @id()
+  name       String
+  createdAt  DateTime @default(now())
+  maxUsers   Int
+  isPrivate  Boolean
+  isClose    Boolean
+  typeOfVote String   @default("fibonacci")
 
   Admin     User        @relation(fields: [adminId], references: [userId])
   adminId   String

@@ -4,19 +4,21 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import socket from '../../../utils/socket';
 import { useCookies } from 'react-cookie';
-import { preventEnterSubmitting } from 'utils/functions';
+import { getAllTypesOfVotes, preventEnterSubmitting } from 'utils/functions';
 
 interface FormData {
   name: string;
   maxUsers: number;
   isPrivate: boolean;
+  typeOfVote: string;
 }
 
 export default function CreateRoomPage() {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     maxUsers: 1,
-    isPrivate: true
+    isPrivate: true,
+    typeOfVote: 'fibonacci'
   });
   const [alertText, setAlertText] = useState<string>('');
   const router = useRouter();
@@ -93,8 +95,22 @@ export default function CreateRoomPage() {
             />
           </div>
           <div className="pb-4">
+            <label className="block mb-1 text-base font-semibold text-gray-900 ps-2 pe-6" htmlFor="typeOfVote">Select a
+              type of vote</label>
+            <select id="typeOfVote" name="typeOfVote"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={formData.typeOfVote}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setFormData((previousForm: FormData) => ({
+                      ...previousForm,
+                      [event.target.name]: event.target.value
+                    }))}>
+              {getAllTypesOfVotes().map((value: string, index: number) => <option key={index}
+                                                                                  value={value}>{value}</option>)}
+            </select>
+          </div>
+          <div className="pb-4">
             <div className="flex items-baseline align-bottom">
-              <label className="block mb-1 text-base font-semibold text-gray-900 ps-2 pe-6" htmlFor="maxUsers">Private
+              <label className="block mb-1 text-base font-semibold text-gray-900 ps-2 pe-6" htmlFor="isPrivate">Private
                 room</label>
               <label className="inline-flex items-center cursor-pointer">
                 <span className="me-3 text-sm font-medium text-gray-900 dark:text-gray-300">No</span>

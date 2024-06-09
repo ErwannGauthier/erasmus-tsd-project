@@ -5,5 +5,6 @@ export type Room = {
   maxUsers: number,
   isPrivate: boolean,
   isClose: boolean,
-  adminId: string
+  adminId: string,
+  typeOfVote: string,
 }

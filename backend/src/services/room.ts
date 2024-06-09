@@ -65,7 +65,7 @@ export class RoomService {
         });
     }
 
-    public async create(name: string, maxUsers: number, isPrivate: boolean, adminId: string): Promise<Room> {
+    public async create(name: string, maxUsers: number, isPrivate: boolean, typeOfVote: string, adminId: string): Promise<Room> {
         return this.prisma.room.create({
             data: {
                 roomId: crypto.randomUUID(),
@@ -73,6 +73,7 @@ export class RoomService {
                 maxUsers: Number(maxUsers),
                 isPrivate: isPrivate,
                 isClose: false,
+                typeOfVote: typeOfVote,
                 adminId: adminId,
             }
         });

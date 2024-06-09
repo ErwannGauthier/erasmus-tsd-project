@@ -6,11 +6,11 @@ import { IoLockClosedOutline } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
 import ModalRoomClose from '@/components/ModalRoomClose';
 
-interface ButtonLeaveRoomProps {
+interface ButtonCloseRoomProps {
   roomId: string;
 }
 
-const ButtonLeaveRoom: React.FC<ButtonLeaveRoomProps> = ({ roomId }) => {
+const ButtonCloseRoom: React.FC<ButtonCloseRoomProps> = ({ roomId }) => {
   const [isCloseRoomModalOpen, setIsCloseRoomModalOpen] = useState<boolean>(false);
   const [cookies] = useCookies(['user']);
   const router = useRouter();
@@ -37,4 +37,4 @@ const ButtonLeaveRoom: React.FC<ButtonLeaveRoomProps> = ({ roomId }) => {
   );
 };
 
-export default ButtonLeaveRoom;
+export default ButtonCloseRoom;

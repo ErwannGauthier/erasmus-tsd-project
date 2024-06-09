@@ -20,6 +20,7 @@ import ButtonLeaveRoom from '@/components/ButtonLeaveRoom';
 import ButtonCloseRoom from '@/components/ButtonCloseRoom';
 import ClosedRoom from '@/components/closedRoom/ClosedRoom';
 import ButtonDownloadCSV from '@/components/ButtonDownloadCSV';
+import { getTypeOfVotes } from '../../../utils/functions';
 
 export interface IUserStory {
   id: number;
@@ -113,7 +114,7 @@ export default function Room({ params }: { params: { id: string } }) {
     return '';
   };
 
-  const values: string[] = ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100'];
+  const values: string[] = getTypeOfVotes(room?.typeOfVote || '');
 
   if (!hasMounted || !room) {
     return <LoadingScreen />;
@@ -150,7 +151,8 @@ export default function Room({ params }: { params: { id: string } }) {
         {isAdmin && <ButtonCloseRoom roomId={roomId} />}
         {!isAdmin && <ButtonLeaveRoom roomId={roomId} />}
         {room && <ButtonDownloadCSV roomId={room.roomId} />}
-        <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} isAdmin={isAdmin} canVote={canVote} />
+        <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} isAdmin={isAdmin} canVote={canVote}
+                        typeOfVote={values} />
       </div>
     </div>
   );

@@ -27,6 +27,7 @@ interface UserStoryPanelProps {
   roomUserStories: UserStoryIncludes[];
   isAdmin: boolean;
   canVote: boolean;
+  typeOfVote: string[];
 }
 
 interface FormDataUpdate {
@@ -36,7 +37,7 @@ interface FormDataUpdate {
   finalVote: string;
 }
 
-const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories, isAdmin, canVote }) => {
+const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories, isAdmin, canVote, typeOfVote }) => {
   const [userStories, setUserStories] = useState<UserStoryIncludes[]>(roomUserStories);
   const [userStoryIdToExpand, setUserStoryIdToExpand] = useState<string>('');
   const [userStoryUpdateFormData, setUserStoryUpdateFormData] = useState<FormDataUpdate>({
@@ -209,7 +210,8 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
         <ModalVoteStart roomId={roomId} userStory={startVoteUserStory} closeModal={closeModalStartVote} />}
 
       {isValidateVoteModalOpen && startVoteUserStory &&
-        <ModalVoteValidate roomId={roomId} userStory={startVoteUserStory} closeModal={closeModalValidateVote} />}
+        <ModalVoteValidate roomId={roomId} userStory={startVoteUserStory} closeModal={closeModalValidateVote}
+                           typeOfVote={typeOfVote} />}
     </>
   )
     ;

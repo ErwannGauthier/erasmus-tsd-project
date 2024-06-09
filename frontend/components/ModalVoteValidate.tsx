@@ -12,9 +12,10 @@ interface ModalProps {
   roomId: string;
   userStory: UserStoryIncludes;
   closeModal: (validate: boolean) => void;
+  typeOfVote: string[];
 }
 
-const ModalVoteValidate: React.FC<ModalProps> = ({ roomId, userStory, closeModal }) => {
+const ModalVoteValidate: React.FC<ModalProps> = ({ roomId, userStory, closeModal, typeOfVote }) => {
   const [formData, setFormData] = useState<FormData>({ finalVote: '' });
 
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
@@ -23,8 +24,6 @@ const ModalVoteValidate: React.FC<ModalProps> = ({ roomId, userStory, closeModal
     socket.emit('validateVote', { roomId: roomId, userStoryId: userStory.userStoryId, finalVote: formData.finalVote });
     closeModal(true);
   };
-
-  const values: number[] = [0, 1, 2, 3, 5, 8, 13, 20, 40, 100];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -49,7 +48,7 @@ const ModalVoteValidate: React.FC<ModalProps> = ({ roomId, userStory, closeModal
                         [event.target.name]: event.target.value
                       }))}>
                 <option value="">We will revote later</option>
-                {values.map((value: number, index: number) => <option key={index} value={value}>{value}</option>)}
+                {typeOfVote.map((value: string, index: number) => <option key={index} value={value}>{value}</option>)}
               </select>
             </div>
           </form>

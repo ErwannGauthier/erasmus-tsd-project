@@ -41,6 +41,7 @@ io.on("connection", (socket) => {
         name: string,
         maxUsers: number,
         isPrivate: boolean,
+        typeOfVote: string,
         adminId: string,
     }
 
@@ -55,14 +56,14 @@ io.on("connection", (socket) => {
 
     socket.on("createRoom", async (data: CreateRoomData, callback) => {
         try {
-            const {name, maxUsers, isPrivate, adminId}: CreateRoomData = data;
+            const {name, maxUsers, isPrivate, typeOfVote, adminId}: CreateRoomData = data;
             //const adminId: string = (socket as CustomSocket).user.userId;
             if (!await userService.get(adminId)) {
                 callback(false, 'You must be logged in.');
                 return
             }
 
-            const room: Room = await roomService.create(name, maxUsers, isPrivate, adminId);
+            const room: Room = await roomService.create(name, maxUsers, isPrivate, typeOfVote, adminId);
             const allRooms: RoomIncludes[] = await roomService.getAll();
             socket.broadcast.emit('updateRooms', allRooms);
             callback(true, room.roomId);
@@ -141,8 +142,9 @@ io.on("connection", (socket) => {
 
         await roomService.update(roomId, room.name, room.maxUsers, room.isPrivate, true, room.adminId);
 
-        socket.to(roomId).emit("updateRoomData", room);
-        socket.emit("updateRoomData", room);
+        const roomUpdated: RoomIncludes = (await roomService.get(roomId))!;
+        socket.to(roomId).emit("updateRoomData", roomUpdated);
+        socket.emit("updateRoomData", roomUpdated);
 
         const allRooms: RoomIncludes[] = await roomService.getAll();
         socket.broadcast.emit('updateRooms', allRooms);
