@@ -239,12 +239,12 @@ export class UserService {
                     userStoryId: userStoryId
                 }
             },
+            update: {
+                value: value
+            },
             create: {
                 userId: id,
                 userStoryId: userStoryId,
-                value: value
-            },
-            update: {
                 value: value
             }
         });

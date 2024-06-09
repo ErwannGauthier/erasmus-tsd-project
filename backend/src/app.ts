@@ -8,6 +8,7 @@ import {PrismaClient, Room, Task, UserStory} from "@prisma/client";
 import {UserService} from "./services/user";
 import {UserStoryIncludes, UserStoryService} from "./services/userStory";
 import {TaskService} from "./services/task";
+import {csvRouter} from "./routes/csv";
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(cors({origin: 'http://localhost:3000'}));
 
 app.use('/user', userRouter);
+app.use('/csv', csvRouter);
 
 const io = new Server(server, {
     cookie: true,
@@ -80,6 +82,9 @@ io.on("connection", (socket) => {
             } else if (!await userService.isInRoom(userId, roomId) && room.maxUsers <= room.UserRoom.length) {
                 callback({isOk: false, error: "The room is full."});
                 return;
+            } else if (room.isClose && !await userService.isInRoom(userId, roomId)) {
+                callback({isOk: false, error: "The room is closed."});
+                return;
             }
 
             const hasJoined: boolean = await userService.joinRoom(userId, roomId);
@@ -127,6 +132,20 @@ io.on("connection", (socket) => {
             console.error(error);
             callback({isOk: false, error: "Internal Server Error"});
         }
+    });
+
+    socket.on('closeRoom', async (data: { roomId: string, userId: string }) => {
+        const {userId, roomId} = data;
+        const room: RoomIncludes | null = await roomService.get(roomId);
+        if (!await userService.get(userId) || !room || room.adminId !== userId) return;
+
+        await roomService.update(roomId, room.name, room.maxUsers, room.isPrivate, true, room.adminId);
+
+        socket.to(roomId).emit("updateRoomData", room);
+        socket.emit("updateRoomData", room);
+
+        const allRooms: RoomIncludes[] = await roomService.getAll();
+        socket.broadcast.emit('updateRooms', allRooms);
     });
 
     socket.on("kickRoom", async (data: { userId: string, roomId: string }, callback) => {

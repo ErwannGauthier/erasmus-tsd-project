@@ -8,12 +8,17 @@ import { RoomIncludes } from '../types/data/RoomIncludes';
 import { useCookies } from 'react-cookie';
 import { UserRoom } from '../types/data/UserRoom';
 import RoomTable from '@/components/RoomTable';
+import RoomClosedTable from '@/components/RoomClosedTable';
+import { UserStoryIncludes } from '../types/data/UserStoryIncludes';
+import { Vote } from 'types/data/Vote';
 
 export default function IndexPage() {
   const [rooms, setRooms] = useState<RoomIncludes[]>([]);
   const [roomsAdmin, setRoomsAdmin] = useState<RoomIncludes[]>([]);
   const [roomsJoined, setRoomsJoined] = useState<RoomIncludes[]>([]);
   const [roomsPublic, setRoomsPublic] = useState<RoomIncludes[]>([]);
+  const [roomsClosedAdmin, setRoomsClosedAdmin] = useState<RoomIncludes[]>([]);
+  const [roomsClosedParticipate, setRoomsClosedParticipate] = useState<RoomIncludes[]>([]);
   const [cookies] = useCookies(['user']);
   const router = useRouter();
 
@@ -28,18 +33,34 @@ export default function IndexPage() {
   const filterRooms = (rooms: RoomIncludes[]) => {
     const userId: string = cookies.user.userId;
     const roomsAdminArray: RoomIncludes[] = rooms.filter((room: RoomIncludes) => !room.isClose && room.adminId === userId);
+
     const roomsJoinedArray: RoomIncludes[] = rooms.filter((room: RoomIncludes) => {
       const joined: UserRoom[] = room.UserRoom.filter((userRoom: UserRoom) => userRoom.userId === userId);
       return !room.isClose && room.adminId !== userId && joined.length > 0;
     });
+
     const roomsPublicArray: RoomIncludes[] = rooms.filter((room: RoomIncludes) => {
       const joined: UserRoom[] = room.UserRoom.filter((userRoom: UserRoom) => userRoom.userId === userId);
       return !room.isClose && !room.isPrivate && room.adminId !== userId && joined.length === 0;
     });
 
+    const roomsClosedAdmin: RoomIncludes[] = rooms.filter((room: RoomIncludes) => room.isClose && room.adminId === userId);
+
+    const roomsCloseJoinedOrParticipateIn: RoomIncludes[] = rooms.filter((room: RoomIncludes) => {
+      const joined: UserRoom[] = room.UserRoom.filter((userRoom: UserRoom) => userRoom.userId === userId);
+      const voted: UserStoryIncludes[] = room.UserStory.filter((userStory: UserStoryIncludes) => {
+        const votes: Vote[] = userStory.Vote.filter((vote: Vote) => vote.userId === userId);
+        return votes.length > 0;
+      });
+
+      return room.isClose && room.adminId !== userId && (joined.length !== 0 || voted.length !== 0);
+    });
+
     setRoomsAdmin(roomsAdminArray);
     setRoomsJoined(roomsJoinedArray);
     setRoomsPublic(roomsPublicArray);
+    setRoomsClosedAdmin(roomsClosedAdmin);
+    setRoomsClosedParticipate(roomsCloseJoinedOrParticipateIn);
   };
 
   console.log(rooms);
@@ -72,6 +93,21 @@ export default function IndexPage() {
           <h2 className="font-semibold text-lg md:text-xl pb-2 ps-2">Public rooms</h2>
           {roomsPublic.length > 0 ? <RoomTable rooms={roomsPublic} /> :
             <p className="font-medium ps-2">There are no public rooms at the moment.</p>
+          }
+        </div>
+
+        <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+
+        <div className="pb-5">
+          <h2 className="font-semibold text-lg md:text-xl pb-2 ps-2">Your closed rooms</h2>
+          {roomsClosedAdmin.length > 0 ? <RoomClosedTable rooms={roomsClosedAdmin} /> :
+            <p className="font-medium ps-2">You don't have closed room.</p>
+          }
+        </div>
+        <div className="pb-5">
+          <h2 className="font-semibold text-lg md:text-xl pb-2 ps-2">Closed rooms you participated in</h2>
+          {roomsClosedParticipate.length > 0 ? <RoomClosedTable rooms={roomsClosedParticipate} /> :
+            <p className="font-medium ps-2">You didn't participate in closed rooms.</p>
           }
         </div>
       </div>

@@ -16,6 +16,10 @@ import { useRouter } from 'next/navigation';
 import { UserStoryIncludes } from '../../../types/data/UserStoryIncludes';
 import Card from '@/components/Card';
 import { Vote } from '../../../types/data/Vote';
+import ButtonLeaveRoom from '@/components/ButtonLeaveRoom';
+import ButtonCloseRoom from '@/components/ButtonCloseRoom';
+import ClosedRoom from '@/components/closedRoom/ClosedRoom';
+import ButtonDownloadCSV from '@/components/ButtonDownloadCSV';
 
 export interface IUserStory {
   id: number;
@@ -48,6 +52,7 @@ export default function Room({ params }: { params: { id: string } }) {
     socket.emit('joinRoom', { userId: cookies.user.userId, roomId: roomId }, (response: JoinRoomResponse) => {
       if (!response.isOk) {
         console.error(response.error);
+        router.push('/');
         return;
       }
 
@@ -114,14 +119,20 @@ export default function Room({ params }: { params: { id: string } }) {
     return <LoadingScreen />;
   }
 
+  if (room.isClose) {
+    return <ClosedRoom room={room} />;
+  }
+
   return (
     <div className="flex flex-row w-full">
       <div className="flex flex-col bg-gray-100" style={{ minWidth: '300px', maxWidth: '70%' }}>
 
         <div className="flex flex-col items-center justify-center bg-gray-100">
           {room && <h1 className="text-2xl font-bold mb-2">{room.name}</h1>}
+          {room && room.isClose && <h2 className="text-2xl font-bold mb-2">Room closed</h2>}
           {votingUserStoryId && canVote &&
-            <h2 className="text-xl font-semibold mb-4">Please vote for the user story: {getVotingUserStory()!.name}</h2>}
+            <h2 className="text-xl font-semibold mb-4">Please vote for the user
+              story: {getVotingUserStory()!.name}</h2>}
           <EllipseNames users={participants} width={220} roomId={roomId} isAdmin={isAdmin}
                         userStory={getVotingUserStory()} showVote={!canVote} />
         </div>
@@ -136,10 +147,11 @@ export default function Room({ params }: { params: { id: string } }) {
 
       <div className="flex-1">
         {isAdmin && <CopyToClipBoard />}
+        {isAdmin && <ButtonCloseRoom roomId={roomId} />}
+        {!isAdmin && <ButtonLeaveRoom roomId={roomId} />}
+        {room && <ButtonDownloadCSV roomId={room.roomId} />}
         <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} isAdmin={isAdmin} canVote={canVote} />
       </div>
-      ;
     </div>
-  )
-    ;
+  );
 }
