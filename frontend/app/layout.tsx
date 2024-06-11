@@ -5,7 +5,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { Logo, UsersIcon } from '@/components/icons';
 
 // import { NavItem } from './nav-item'; // Removed as it's not needed now
-import { Logout } from './(account)/logout/logout';
+import { Logout } from './(account)/logout/page';
 import { LoginButton } from './(account)/login/LoginButton';
 // import { useCookies } from 'react-cookie';
 

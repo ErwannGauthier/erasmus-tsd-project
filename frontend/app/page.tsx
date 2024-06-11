@@ -11,10 +11,9 @@ import RoomTable from '@/components/RoomTable';
 import RoomClosedTable from '@/components/RoomClosedTable';
 import { UserStoryIncludes } from '../types/data/UserStoryIncludes';
 import { LoginButton } from './(account)/login/LoginButton';
-import Logout from './(account)/logout/logout';
 import { Vote } from 'types/data/Vote';
 import { useIsUserConnected } from '../utils/cookieUtils';
-import { is } from 'drizzle-orm';
+import ButtonLogout from '@/components/ButtonLogout';
 
 export default function IndexPage() {
   const [rooms, setRooms] = useState<RoomIncludes[]>([]);
@@ -30,7 +29,7 @@ export default function IndexPage() {
   useEffect(() => {
     if (!isUserConnected()) {
       router.push('/login');
-      return
+      return;
     }
     socket.emit('getAllRooms');
     socket.on('updateRooms', (roomsUpdate: RoomIncludes[]) => {
@@ -78,14 +77,14 @@ export default function IndexPage() {
     <main className="flex flex-1 flex-col p-4 md:p-6">
       <div className="flex items-center mb-8">
         <h1 className="font-semibold text-xl md:text-2xl">Rooms</h1>
-        <div className='flex flex-col ml-auto '>
+        <div className="flex flex-col ml-auto ">
           <button className="flex items-center space-x-2 p-2 bg-blue-500 text-white rounded"
                   onClick={() => router.push('/room/create')}>
             <span><IoAddCircleOutline className="h-4 w-4" /></span>
             <span>Create Room</span>
           </button>
           {
-            isUserConnected() ? <Logout></Logout> : <LoginButton></LoginButton>
+            isUserConnected() ? <ButtonLogout /> : <LoginButton></LoginButton>
           }
 
         </div>
