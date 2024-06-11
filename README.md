@@ -1,5 +1,5 @@
 # **erasmus-tsd-project**
-### *Developed by Lucas BUTERY & Erwann GAUTHIER*
+### *Developed by Lucas BUTERY (ER) & Erwann GAUTHIER (ER1684)*
 
 ## **Tools used**
 - **Frontend**
