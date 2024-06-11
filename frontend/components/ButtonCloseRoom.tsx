@@ -26,7 +26,7 @@ const ButtonCloseRoom: React.FC<ButtonCloseRoomProps> = ({ roomId }) => {
   return (
     <>
       <button onClick={() => handleClick()}
-              className="flex align-middle items-center justify-between text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">
+              className="flex align-middle items-center text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">
         <IoLockClosedOutline className="inline-block mr-2" />
         Close
       </button>

@@ -125,7 +125,7 @@ export default function Room({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex flex-row w-full">
+    <div className="flex flex-row w-full bg-gray-100 h-screen">
       <div className="flex flex-col bg-gray-100" style={{ minWidth: '300px', maxWidth: '70%' }}>
 
         <div className="flex flex-col items-center justify-center bg-gray-100">
@@ -146,11 +146,13 @@ export default function Room({ params }: { params: { id: string } }) {
         }
       </div>
 
-      <div className="flex-1">
-        {isAdmin && <CopyToClipBoard />}
-        {isAdmin && <ButtonCloseRoom roomId={roomId} />}
-        {!isAdmin && <ButtonLeaveRoom roomId={roomId} />}
-        {room && <ButtonDownloadCSV roomId={room.roomId} />}
+      <div className="flex-1 bg-white">
+        <div className='flex flex-col w-fit'>
+          {isAdmin && <CopyToClipBoard />}
+          {isAdmin && <ButtonCloseRoom roomId={roomId} />}
+          {!isAdmin && <ButtonLeaveRoom roomId={roomId} />}
+          {room && <ButtonDownloadCSV roomId={room.roomId} />}
+        </div>
         <UserStoryPanel roomId={roomId} roomUserStories={room.UserStory || []} isAdmin={isAdmin} canVote={canVote}
                         typeOfVote={values} />
       </div>

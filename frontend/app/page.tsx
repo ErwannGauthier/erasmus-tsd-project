@@ -30,6 +30,7 @@ export default function IndexPage() {
   useEffect(() => {
     if (!isUserConnected()) {
       router.push('/login');
+      return
     }
     socket.emit('getAllRooms');
     socket.on('updateRooms', (roomsUpdate: RoomIncludes[]) => {

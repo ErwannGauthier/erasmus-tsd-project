@@ -123,8 +123,8 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
   };
 
   return (
-    <>
-      <button onClick={() => setIsCreateModalOpen(true)} className="ml-2 p-2 bg-blue-500 text-white rounded">
+    <div className='flex flex-col'>
+      <button onClick={() => setIsCreateModalOpen(true)} className="ml-2 p-2 bg-blue-500 text-white rounded-lg w-fit px-6 self-center">
         <IoAddCircleOutline className="inline-block mr-2" /> Add User Story
       </button>
       <ul className="mt-4">
@@ -212,7 +212,7 @@ const UserStoryPanel: React.FC<UserStoryPanelProps> = ({ roomId, roomUserStories
       {isValidateVoteModalOpen && startVoteUserStory &&
         <ModalVoteValidate roomId={roomId} userStory={startVoteUserStory} closeModal={closeModalValidateVote}
                            typeOfVote={typeOfVote} />}
-    </>
+    </div>
   )
     ;
 };
