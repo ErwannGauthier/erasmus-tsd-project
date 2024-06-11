@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/app.ts"
+    "build": "npx tsc",
+    "start": "node dist/app.js",
+    "dev": "nodemon src/app.ts"
   },
   "keywords": [],
   "author": "",

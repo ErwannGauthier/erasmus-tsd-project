@@ -103,7 +103,7 @@ io.on("connection", (socket) => {
 
             callback({isOk: true, message: "You joined the room.", room: updatedRoom});
         } catch (error) {
-            console.error(error);
+            //console.error(error);
             callback({isOk: false, error: "Internal Server Error"});
         }
     });
