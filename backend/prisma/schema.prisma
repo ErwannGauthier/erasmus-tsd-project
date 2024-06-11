@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  roomId     String   @id()
+  name       String
+  createdAt  DateTime @default(now())
+  maxUsers   Int
+  isPrivate  Boolean
+  isClose    Boolean
+  typeOfVote String   @default("fibonacci")
+
+  Admin     User        @relation(fields: [adminId], references: [userId])
+  adminId   String
+  UserRoom  UserRoom[]
+  UserStory UserStory[]
+}
+
+model Task {
+  taskId      String @id()
+  name        String
+  description String
+
+  UserStory   UserStory @relation(fields: [userStoryId], references: [userStoryId], onDelete: Cascade)
+  userStoryId String
+}
+
+model User {
+  userId   String @id()
+  name     String
+  surname  String
+  email    String @unique()
+  password String
+
+  Room     Room[]
+  UserRoom UserRoom[]
+  Vote     Vote[]
+}
+
+model UserRoom {
+  roomId String
+  userId String
+
+  Room Room @relation(fields: [roomId], references: [roomId])
+  User User @relation(fields: [userId], references: [userId])
+
+  @@id([roomId, userId], name: "userRoomId")
+}
+
+model UserStory {
+  userStoryId String @id()
+  name        String
+  description String
+  finalVote   String
+
+  Room   Room   @relation(fields: [roomId], references: [roomId])
+  roomId String
+  Task   Task[]
+  Vote   Vote[]
+}
+
+model Vote {
+  userId      String
+  userStoryId String
+  value       String
+
+  User      User      @relation(fields: [userId], references: [userId])
+  UserStory UserStory @relation(fields: [userStoryId], references: [userStoryId])
+
+  @@id([userId, userStoryId], name: "voteId")
+}
