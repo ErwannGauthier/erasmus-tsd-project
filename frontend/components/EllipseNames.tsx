@@ -42,7 +42,7 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdm
     for (let i = 0; i < count; i++) {
       const angle = i * angleStep;
       const x = rx * Math.cos(angle);
-      const y = ry * Math.sin(angle);
+      const y = (ry) * Math.sin(angle);
       positions.push({ x, y });
     }
 
@@ -67,7 +67,7 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width, roomId, isAdm
   };
 
   return (
-    <div className="relative mx-auto" style={{ width: `${size.width}px`, height: `${size.height}px` }}>
+    <div className="relative mx-auto" style={{ width: `${540}px`, height: `${290.52}px` }}>
       <div className="absolute inset-0 bg-table-image bg-cover bg-center rounded-full"
            style={{ clipPath: 'ellipse(75% 50% at 50% 50%)' }}></div>
       {users.map((user, index) => (
