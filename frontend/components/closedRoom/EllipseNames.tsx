@@ -40,7 +40,7 @@ const EllipseNames: React.FC<EllipseNamesProps> = ({ users, width }) => {
   };
 
   return (
-    <div className="relative mx-auto" style={{ width: `${size.width}px`, height: `${size.height}px` }}>
+    <div className="relative mx-auto" style={{ width: `${540}px`, height: `${290.52}px` }}>
       <div className="absolute inset-0 bg-table-image bg-cover bg-center rounded-full"
            style={{ clipPath: 'ellipse(75% 50% at 50% 50%)' }}></div>
       {users.map((user, index) => (
