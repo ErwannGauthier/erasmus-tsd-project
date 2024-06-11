@@ -125,8 +125,8 @@ export default function Room({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex flex-row w-full bg-gray-100 h-screen">
-      <div className="flex flex-col bg-gray-100" style={{ minWidth: '300px', maxWidth: '70%' }}>
+    <div className="flex flex-col md:flex-row w-full bg-gray-100 h-screen">
+      <div className="flex flex-col  bg-gray-100" style={{ minWidth: '300px', maxWidth: '70%' }}>
 
         <div className="flex flex-col items-center justify-center bg-gray-100">
           {room && <h1 className="text-2xl font-bold mb-2">{room.name}</h1>}
@@ -146,7 +146,7 @@ export default function Room({ params }: { params: { id: string } }) {
         }
       </div>
 
-      <div className="flex-1 bg-white">
+      <div className="flex-1 bg-white ">
         <div className='flex flex-col w-fit'>
           {isAdmin && <CopyToClipBoard />}
           {isAdmin && <ButtonCloseRoom roomId={roomId} />}
